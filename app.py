@@ -76,19 +76,20 @@ def pdf_api():
         return jsonify({"error": str(exc)}), 400
 
 
-mcp_app = mcp.streamable_http_app()
-
+mcp_app = mcp.streamable_http_app(
+    streamable_http_path="/mcp",
+    host="0.0.0.0",
+)
 
 @asynccontextmanager
 async def lifespan(app):
-    async with mcp_app.router.lifespan_context(mcp_app):
+    async with mcp.session_manager.run():
         yield
-
 
 app = Starlette(
     routes=[
+        *mcp_app.routes,
         Mount("/", app=WSGIMiddleware(flask_app)),
-        Mount("/", app=mcp_app),
     ],
     lifespan=lifespan,
 )
