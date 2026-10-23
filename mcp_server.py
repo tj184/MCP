@@ -7,6 +7,7 @@ mcp = FastMCP(
     name="My Python MCP Server",
     stateless_http=True,
     json_response=True,
+    streamable_http_path="/mcp",
 )
 
 @mcp.tool()
