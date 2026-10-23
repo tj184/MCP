@@ -1,6 +1,8 @@
 
 import os
 import io
+import base64
+from contextlib import asynccontextmanager
 
 from flask import Flask, jsonify, request, send_file
 from starlette.applications import Starlette
@@ -21,10 +23,7 @@ def home():
         "name": "My Python MCP Server",
         "status": "running",
         "mcp_endpoint": "/mcp",
-        "tools": [
-            "weather_tool",
-            "image_to_pdf_tool"
-        ]
+        "tools": ["weather_tool", "image_to_pdf_tool"],
     })
 
 
@@ -45,6 +44,7 @@ def weather_api():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception:
+        flask_app.logger.exception("Weather API failed")
         return jsonify({"error": "Weather service unavailable"}), 502
 
 
@@ -53,12 +53,10 @@ def pdf_api():
     uploaded = request.files.getlist("images")
 
     if not uploaded:
-        return jsonify({"error": "No images uploaded"}), 400
+        return jsonify({"error": "Upload images using the 'images' field"}), 400
 
     if len(uploaded) > 10:
         return jsonify({"error": "Maximum 10 images"}), 400
-
-    import base64
 
     try:
         encoded_images = [
@@ -74,19 +72,25 @@ def pdf_api():
             as_attachment=True,
             download_name="converted.pdf",
         )
-
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
 
 mcp_app = mcp.streamable_http_app()
 
+
+@asynccontextmanager
+async def lifespan(app):
+    async with mcp_app.router.lifespan_context(mcp_app):
+        yield
+
+
 app = Starlette(
     routes=[
-        *mcp_app.routes,
         Mount("/", app=WSGIMiddleware(flask_app)),
+        Mount("/", app=mcp_app),
     ],
-    lifespan=mcp_app.lifespan,
+    lifespan=lifespan,
 )
 
 
@@ -96,5 +100,5 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 8000)),
+        port=int(os.environ.get("PORT", "8000")),
     )
