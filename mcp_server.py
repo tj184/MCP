@@ -4,7 +4,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 
 from tools.weather import get_weather
 from tools.image_to_pdf import images_to_pdf
-from reminder_tools import create_reminder
+from tools.reminder_tools import create_reminder
 
 
 security = TransportSecuritySettings(
