@@ -8,10 +8,15 @@ from zoneinfo import ZoneInfo
 
 import requests
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
-DB_PATH = "reminders.db"
+
+
+DB_PATH = str(
+    Path(__file__).resolve().parent.parent / "reminders.db"
+)
 BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 LOCAL_TZ = ZoneInfo("Asia/Kolkata")
