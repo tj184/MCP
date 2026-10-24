@@ -4,8 +4,10 @@ from mcp.server.transport_security import TransportSecuritySettings
 
 from tools.weather import get_weather
 from tools.image_to_pdf import images_to_pdf
-from tools.reminder_tools import create_reminder
-
+from tools.reminder_tools import (
+    create_reminder,
+    start_reminder_worker,
+)
 
 security = TransportSecuritySettings(
     enable_dns_rebinding_protection=True,
@@ -23,23 +25,27 @@ mcp = FastMCP(
     transport_security=security,
 )
 
+# Start the reminder worker in this server process.
+# The worker checks pending reminders every 10 seconds.
+start_reminder_worker()
+
 
 @mcp.tool()
 def weather_tool(city: str) -> dict:
     """Get current weather for a city."""
     return get_weather(city)
 
+
 @mcp.tool()
 def schedule_phone_reminder(
     message: str,
-    scheduled_at: str
+    scheduled_at: str,
 ) -> dict:
     """
     Schedule a Telegram reminder.
 
-    scheduled_at must be an ISO 8601 timestamp
-    with timezone offset, for example:
-    2026-10-25T08:00:00+05:30
+    scheduled_at must be an ISO 8601 timestamp with
+    a timezone offset, e.g. 2026-10-25T08:00:00+05:30.
     """
     return create_reminder(message, scheduled_at)
 
