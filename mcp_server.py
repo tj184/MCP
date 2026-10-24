@@ -43,9 +43,7 @@ def schedule_phone_reminder(
 ) -> dict:
     """
     Schedule a Telegram reminder.
-
-    scheduled_at must be an ISO 8601 timestamp with
-    a timezone offset, e.g. 2026-10-25T08:00:00+05:30.
+    scheduled_at must include a timezone offset.
     """
     return create_reminder(message, scheduled_at)
 
